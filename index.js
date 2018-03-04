@@ -3,7 +3,7 @@ var
 	events = require('events'),
 	redis = require('redis');
 
-function RedisEvent(host, channelsList) {
+function RedisEvent(connection_options, channelsList) {
 	events.EventEmitter.call(this);
 
 	var self=this;
@@ -14,20 +14,18 @@ function RedisEvent(host, channelsList) {
 		throw new Error("No channels specified to RedisEvent");
 	}
 
-	if (!host) {
-		throw new Error("No hostname specified to RedisEvent");
-	}
 
 	this.channelsList = channelsList;
 
 	this.pubRedis = redis.createClient(
-		6379, host, {
+		Object.assign({
 			enable_offline_queue: false,
 			no_ready_check: true,
 			retry_strategy: function (options) {
 				return 3000 + Math.round(Math.random() * 3000);
 			}
-		}
+		}, connection_options)
+
 	);
 	this.pubRedis.on('error', function(e){ console.log(e); });
 	this.pubRedis.on('ready', function() {
@@ -39,13 +37,13 @@ function RedisEvent(host, channelsList) {
 	this.pubRedis.on('end', function() {self._connectedCount--; });
 
 	this.subRedis = redis.createClient(
-		6379, host, {
+		Object.assign({
 			enable_offline_queue: false,
 			no_ready_check: true,
 			retry_strategy: function (options) {
 				return 3000 + Math.round(Math.random() * 3000);
 			}
-		}
+		}, connection_options)
 	);
 	this.subRedis.on('error', function(e){ console.log(e); });
 	this.subRedis.on('ready', function() {

@@ -10,7 +10,7 @@ Supports channels (sort of namespaces). This code is heavily used 24x7 on a thou
 ```javascript
 var RedisEvent = require('redis-event');
 
-var ev = new RedisEvent('redis-host', ['updates', 'stats']);
+var ev = new RedisEvent({}, ['updates', 'stats']);
 ev.on('ready', function() {
 	ev.on('updates:server', function(data) {
 		console.log("Host %s updated to %d", data.hostname, data.count);
@@ -38,13 +38,13 @@ npm install redis-event
 
 ## API
 
-### new RedisEvent(hostname, [channel, channel, channel...])
+### new RedisEvent(connection_options, [channel, channel, channel...])
 
 Initialise object. 
 
 __Arguments__
 
-* `hostname` - redis hostname to connect to
+* `connection_options` - redis createClient connection options (see https://github.com/NodeRedis/node_redis#rediscreateclient for available options and defaults)
 * `channel` - name(s) of the redis pub/sub channel(s) to subscribe to
 
 ### redisEvent.pub(eventName, payload) 

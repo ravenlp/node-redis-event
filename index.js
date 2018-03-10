@@ -11,14 +11,21 @@ function RedisEvent(connection_options, channelsList) {
 	self._connectedCount = 0;
 
 	self._createClient = function(setup) {
-		if (!connection_options) {
+		setup = Object.assign({
+			enable_offline_queue: false,
+			no_ready_check: true,
+			retry_strategy: function (options) {
+				return 3000 + Math.round(Math.random() * 3000);
+			}
+		}, setup);
+		if (!setup) {
 			return redis.createClient(setup)
 		}
-		if (connection_options.port && connection_options.host) {
-			return redis.createClient(connection_options.port, connection_options.host, setup)
+		if (setup.port && setup.host) {
+			return redis.createClient(setup.port, setup.host, setup)
 		} else {
-			if (connection_options.port) {
-				return redis.createClient(connection_options.port, setup)
+			if (setup.port) {
+				return redis.createClient(setup.port, setup)
 			}
 		}
 		
@@ -31,13 +38,7 @@ function RedisEvent(connection_options, channelsList) {
 
 	this.channelsList = channelsList;
 
-	this.pubRedis = self._createClient({
-		enable_offline_queue: false,
-		no_ready_check: true,
-		retry_strategy: function (options) {
-			return 3000 + Math.round(Math.random() * 3000);
-		}
-	});
+	this.pubRedis = self._createClient(connection_options);
 	this.pubRedis.on('error', function(e){ console.log(e); });
 	this.pubRedis.on('ready', function() {
 		self._connectedCount++;
@@ -47,13 +48,7 @@ function RedisEvent(connection_options, channelsList) {
 	});
 	this.pubRedis.on('end', function() { self._connectedCount--; });
 
-	this.subRedis = self._createClient({
-		enable_offline_queue: false,
-		no_ready_check: true,
-		retry_strategy: function (options) {
-			return 3000 + Math.round(Math.random() * 3000);
-		}
-	});
+	this.subRedis = self._createClient(connection_options);
 	this.subRedis.on('error', function(e){ console.log(e); });
 	this.subRedis.on('ready', function() {
 		self._connectedCount++;
